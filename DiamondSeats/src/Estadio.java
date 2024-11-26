@@ -6,6 +6,7 @@ public class Estadio {
     private HashMap<Cliente, List<Asiento>> reservations = new HashMap<>();
     private Stack<String> undoStack = new Stack<>();
     private Map<String, Queue<Cliente>> waitingList = new HashMap<>();
+    private HashMap<Cliente, List<Asiento>> waitingSeatNum = new HashMap<>();
 
     public Estadio() {
         initializeSeats();
@@ -32,8 +33,7 @@ public class Estadio {
         }
 
         if (seatsToReserve.size() < quantity) {
-            waitingList.putIfAbsent(section, new LinkedList<>());
-            waitingList.get(section).add(cliente);
+            waitingListProcess(cliente, section, seatsToReserve, "add");
             return false;
         }
 
@@ -46,5 +46,46 @@ public class Estadio {
         return true;
     }
 
+    public boolean cancelReservation(Cliente cliente) {
+        if (cliente == null || !reservations.containsKey(cliente)) {
+            return false;
+        }
+
+        List<Asiento> reservedSeats = reservations.remove(cliente);
+        String availableSection = reservedSeats.get(0).getSection();
+        availableSeats.addAll(reservedSeats);
+        waitingListProcess(null, availableSection, null, "check");
+        reservationHistory.add("Cancelled reservation for " + cliente.getName());
+        undoStack.push("Cancel");
+
+        return true;
+    }
+
+    private void waitingListProcess(Cliente cliente, String section, List<Asiento> seatsToReserve, String action) {
+        switch (action) {
+            case "add":
+                waitingList.putIfAbsent(section, new LinkedList<>());
+                waitingList.get(section).add(cliente);
+                waitingSeatNum.putIfAbsent(cliente, new ArrayList<>());
+                waitingSeatNum.get(cliente).addAll(seatsToReserve);
+                break;
+
+            case "check":
+                Queue<Cliente> clients = waitingList.get(section);
+                if (clients != null) {
+                    while (!clients.isEmpty()) {
+                        Cliente nextClient = clients.peek(); 
+                        boolean reserved = reserveSeat(nextClient, section, waitingSeatNum.get(nextClient).size());
+                        if (reserved) {
+                            clients.poll();
+                            waitingSeatNum.remove(nextClient);
+                        } else {
+                            break;
+                        }
+                    }
+                }
+                break;
+        }
+    }
 }
 

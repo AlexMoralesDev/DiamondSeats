@@ -1,5 +1,19 @@
 import java.util.*;
-
+/**
+ * Clase `Estadio` maneja la reservas de asientos en un estadio de pelota.
+ * Estructura:
+ * - Hash set usado para availableSeats usado por su eficiencia en operaciones 
+ *   como agregar y buscar elementos únicos.
+ * - LinkedList usado para reservationHistory porque es eficiente para operaciones de inserción y recorrido.
+ * - HashMap usado para reservaciones ya que asocia clientes con los asientos que han reservado, lo que permite 
+ *   búsquedas rápidas basadas en los clientes.
+ * - Stack utilizado para implementar una funcionalidad de deshacer operaciones. Un stack es ideal 
+ *   porque sigue la estructura LIFO.
+ * - HashMap usado para waitingList para poder almacenar listas de espera por sección, usando colas (Queue) para gestionar 
+ *   el orden de llegada de los clientes.
+ * - HashMap usado para waitingSeatNum para asociar clientes con los asientos que están esperando, permitiendo 
+ *   búsquedas rápidas.
+ */
 public class Estadio {
     private Set<Asiento> availableSeats = new HashSet<>();
     private LinkedList<String> reservationHistory = new LinkedList<>();
@@ -7,11 +21,11 @@ public class Estadio {
     private Stack<String> undoStack = new Stack<>();
     private Map<String, Queue<Cliente>> waitingList = new HashMap<>();
     private HashMap<Cliente, List<Asiento>> waitingSeatNum = new HashMap<>();
-
+    // Constructor
     public Estadio() {
         initializeSeats();
     }
-
+    // Inicializa los asientos del estadio
     private void initializeSeats() {
         for (int i = 1; i <= 500; i++) {
             availableSeats.add(new Asiento("Field Level", i / 10, i % 10, 300));
@@ -23,20 +37,21 @@ public class Estadio {
             availableSeats.add(new Asiento("Grandstand Level", i / 10, i % 10, 45));
         }
     }
-
+    // Reserva asientos tomando el cliente, seccion y cantidad de boletos a comprar
     public boolean reserveSeat(Cliente cliente, String section, int quantity) {
         List<Asiento> seatsToReserve = new ArrayList<>();
+        // Busca asientos disponibles en la sección
         for (Asiento asiento : availableSeats) {
             if (asiento.getSection().equals(section) && seatsToReserve.size() < quantity) {
                 seatsToReserve.add(asiento);
             }
         }
-
+        // Si no hay suficientes asientos, añade al cliente a la lista de espera.
         if (seatsToReserve.size() < quantity) {
             waitingListProcess(cliente, section, seatsToReserve, "add");
             return false;
         }
-
+         // Actualiza las reservas y los asientos disponibles.
         reservations.putIfAbsent(cliente, new ArrayList<>());
         reservations.get(cliente).addAll(seatsToReserve);
         availableSeats.removeAll(seatsToReserve);

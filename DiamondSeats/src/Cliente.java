@@ -1,3 +1,4 @@
+// Class que define los clientes que realizan la compra de boletos
 public class Cliente {
     private String name;
     private String email;

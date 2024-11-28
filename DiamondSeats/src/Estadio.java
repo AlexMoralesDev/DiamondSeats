@@ -60,41 +60,48 @@ public class Estadio {
 
         return true;
     }
-
+    // Elimina la reservacion hecha por un cliente. Al porder eliminar el cliente, verifica la lista de espara para clientes elegibles
+    // para los asientos quitados de la reservacion.
     public boolean cancelReservation(Cliente cliente) {
+        // Verifica si el cliente existe/esta en la lista de las reservaciones hechas
         if (cliente == null || !reservations.containsKey(cliente)) {
             return false;
         }
 
-        List<Asiento> reservedSeats = reservations.remove(cliente);
-        String availableSection = reservedSeats.get(0).getSection();
-        availableSeats.addAll(reservedSeats);
-        waitingListProcess(null, availableSection, null, "check");
-        reservationHistory.add("Cancelled reservation for " + cliente.getName());
+        List<Asiento> reservedSeats = reservations.remove(cliente); //consigue los asientos de la reservacion cancelada
+        String availableSection = reservedSeats.get(0).getSection(); //coge la seccion del cliente que elimino su reservacion para el proceso de la lista de espera
+        availableSeats.addAll(reservedSeats); //regresa los asientos de la reservacion cancelada a los asientos disponibles
+        waitingListProcess(null, availableSection, null, "check"); //verifica la lista de espera
+        reservationHistory.add("Cancelled reservation for " + cliente.getName()); //anade un log al historia de las reservaciones
         undoStack.push("Cancel");
 
         return true;
     }
 
+    //Proceso completo del proceso de la lista de eserpa. Tiene dos casos: uno para el proceso de hacer una reservacion y el otro verifica la lista de espera
+    // luego de cancelar una reservacion.
     private void waitingListProcess(Cliente cliente, String section, List<Asiento> seatsToReserve, String action) {
         switch (action) {
+            // Anade cliente a lista de espera luego de tratar de hacer una reservacion
             case "add":
-                waitingList.putIfAbsent(section, new LinkedList<>());
-                waitingList.get(section).add(cliente);
-                waitingSeatNum.putIfAbsent(cliente, new ArrayList<>());
-                waitingSeatNum.get(cliente).addAll(seatsToReserve);
+                waitingList.putIfAbsent(section, new LinkedList<>()); // verifica si la seccion que quiere el cliente ya esta en la lista de espera, sino la anade
+                waitingList.get(section).add(cliente); //anade al cliente a la lista de espera por seccion
+                waitingSeatNum.putIfAbsent(cliente, new ArrayList<>()); // verifica si el cliente ya tiene la cantidad de sillas que quiere guardas, sino registra el cliente para poder guardar sus sillas
+                waitingSeatNum.get(cliente).addAll(seatsToReserve); //guarda la cantidad de asientos que queria el cliente recien anadido a la lista de espera
                 break;
 
+            // verifica lista de espera para clientes de la seccion que acaba de recibir asientos de la reservacion cancelada
             case "check":
-                Queue<Cliente> clients = waitingList.get(section);
-                if (clients != null) {
-                    while (!clients.isEmpty()) {
-                        Cliente nextClient = clients.peek(); 
-                        boolean reserved = reserveSeat(nextClient, section, waitingSeatNum.get(nextClient).size());
-                        if (reserved) {
+                Queue<Cliente> clients = waitingList.get(section); //Recibe un queue de los clientes de la seccion disponible para mantener el orden de la lista de espera
+                if (clients != null) { // verifica que el cliente existe
+                    while (!clients.isEmpty()) { //verifica que el queue no este vacio
+                        Cliente nextClient = clients.peek(); // guarda el cliente primero/proximo en fila para verificar si es elegible para las silla ahora disponibles
+                        boolean reserved = reserveSeat(nextClient, section, waitingSeatNum.get(nextClient).size()); //trata crear una reservacion para el cliente en lista de espera
+                        if (reserved) { // si pudo hacerle una reservacion, elimina el cliente de la lista de espera
                             clients.poll();
-                            waitingSeatNum.remove(nextClient);
+                            waitingSeatNum.remove(nextClient); // elimina las sillas que el cliente queria ya que pudo hacer su reservacion
                         } else {
+                            // si no pudo hacer reservacion, se queda en la lista
                             break;
                         }
                     }

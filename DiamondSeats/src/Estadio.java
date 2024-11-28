@@ -1,13 +1,15 @@
 import java.util.*;
 
 public class Estadio {
+    
     private Set<Asiento> availableSeats = new HashSet<>();
     private LinkedList<String> reservationHistory = new LinkedList<>();
     private HashMap<Cliente, List<Asiento>> reservations = new HashMap<>();
     private Stack<String> undoStack = new Stack<>();
     private Map<String, Queue<Cliente>> waitingList = new HashMap<>();
     private HashMap<Cliente, List<Asiento>> waitingSeatNum = new HashMap<>();
-
+    public Map<String,Integer>seccionvscosto=Map.of("Grandstand Level",45,"Main Field",120,"Field Level",300);
+    
     public Estadio() {
         initializeSeats();
     }
@@ -87,5 +89,7 @@ public class Estadio {
                 break;
         }
     }
+
+
 }
 

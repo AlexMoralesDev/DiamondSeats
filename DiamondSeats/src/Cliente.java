@@ -1,9 +1,9 @@
 public class Cliente {
     private String name;
     private String email;
-    private String phone;
+    private int phone;
 
-    public Cliente(String name, String email, String phone) {
+    public Cliente(String name, String email, int phone) {
         this.name = name;
         this.email = email;
         this.phone = phone;
@@ -17,7 +17,7 @@ public class Cliente {
         return email;
     }
 
-    public String getPhone() {
+    public int getPhone() {
         return phone;
     }
 }
